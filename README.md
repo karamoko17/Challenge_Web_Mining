@@ -5,7 +5,7 @@ ecran avec détails de l'analyse
 Technologies :
 - streamlit
 
-- shazam ? pour reconnaitre et rappatrier les metadata
+- shazam ou Acrcloud ? pour reconnaitre et rappatrier les metadata
 - spotify pour l'API
 
 - 1. clustering
