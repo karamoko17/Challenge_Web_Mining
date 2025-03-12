@@ -1,0 +1,14 @@
+[client]
+showSidebarNavigation = false
+
+[server]
+maxUploadSize = 2000
+maxMessageSize = 2048
+
+[theme]
+# Blue/Green color scheme
+primaryColor = "#00c8d4"  # Deeper cyan for highlights
+backgroundColor = "#0a1117"  # Dark blue-tinted background
+secondaryBackgroundColor = "#162736"  # Blue-grey panels
+textColor = "#e6e9ef"  # Bright text
+font = "monospace"
