@@ -4,3 +4,4 @@ scikit-learn
 lyricsgenius
 spotipy
 shazamio
+streamlit
