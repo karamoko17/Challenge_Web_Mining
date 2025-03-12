@@ -1,20 +1,25 @@
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.cluster import KMeans
-import numpy as np
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_score
 
 def preprocess_data(df):
     # Sélection des colonnes pertinentes pour le clustering
     numeric_features = ['danceability', 'loudness', 'acousticness', 'instrumentalness', 'valence', 'energy', 'release_date']
     categorical_features = ['topic', 'genre']
     
-    # Remplacer les virgules par des points dans les colonnes numériques
-    for feature in numeric_features:
-        df[feature] = df[feature].replace({',': '.'}, regex=True)  # Remplace les virgules par des points
-        df[feature] = pd.to_numeric(df[feature], errors='coerce')  # Convertit les valeurs en numériques (NaN si problème)
-
-    # Normalisation des données numériques
+    # Vérification et nettoyage des colonnes numériques
+    for col in numeric_features:
+        # Remplacer les virgules par des points et convertir en numérique
+        df[col] = pd.to_numeric(df[col].replace({',': '.'}, regex=True), errors='coerce')
+    
+    # Remplir les valeurs manquantes par 0 (ou une autre stratégie de ton choix)
     df_numeric = df[numeric_features].fillna(0)
+    
+    # Normalisation des données numériques
     scaler = StandardScaler()
     df_numeric_scaled = scaler.fit_transform(df_numeric)
     
@@ -29,8 +34,14 @@ def preprocess_data(df):
 
 
 def train_clustering_model(df_scaled, n_clusters=10):
+    # Initialisation du modèle de KMeans
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     clusters = kmeans.fit_predict(df_scaled)
+    
+    # Évaluation du modèle de clustering avec silhouette score
+    silhouette_avg = silhouette_score(df_scaled, clusters)
+    print(f"Silhouette Score pour {n_clusters} clusters: {silhouette_avg:.4f}")
+    
     return kmeans, clusters
 
 def recommend_similar_songs(song_name, artist_name, df, df_scaled, kmeans, scaler, n_recommendations=15):
@@ -62,20 +73,43 @@ def recommend_similar_songs(song_name, artist_name, df, df_scaled, kmeans, scale
     
     return recommendations
 
+def visualize_clusters(df_scaled, kmeans):
+    # Réduction de dimensionnalité pour la visualisation des clusters (PCA)
+    pca = PCA(n_components=2)
+    reduced_data = pca.fit_transform(df_scaled)
+    
+    # Visualisation
+    plt.figure(figsize=(10, 6))
+    plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c=kmeans.labels_, cmap='viridis', s=50, alpha=0.6)
+    plt.title("Visualisation des clusters")
+    plt.xlabel("Composant principal 1")
+    plt.ylabel("Composant principal 2")
+    plt.colorbar(label="Cluster ID")
+    plt.show()
+
+
 # Chargement des données
 df = pd.read_csv(
-    "C:\\Users\\akaramoko\\Desktop\\Challenge_Web_Mining\\Data\\tcc_ceds_music.csv",
+    "D:\\M2 SISE\\Web Mining\\Challenge_Web_Mining\\Data\\tcc_ceds_music.csv",
     sep=";",
     encoding="ISO-8859-1",
     skipinitialspace=True,
     on_bad_lines="skip"
 )
 
+# Prétraitement des données
 df_scaled, scaler, encoder = preprocess_data(df)
-kmeans, clusters = train_clustering_model(df_scaled, n_clusters=10)
+
+# Entraînement du modèle de clustering
+n_clusters = 3
+kmeans, clusters = train_clustering_model(df_scaled, n_clusters)
 df['cluster'] = clusters
 
 # Exemple d'utilisation
 song_name = "the dogs of war"  
 artist_name = "pink floyd"  
 recommendations = recommend_similar_songs(song_name, artist_name, df, df_scaled, kmeans, scaler)
+
+# Visualisation des clusters
+visualize_clusters(df_scaled, kmeans)
+
