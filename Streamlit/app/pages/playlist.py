@@ -19,6 +19,7 @@ st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layo
 csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "tcc_ceds_music.csv")
 df = pd.read_csv(csv_path)
 
+
 # Fonction pour traiter la reconnaissance de manière asynchrone
 async def process_recognition(file_path):
     recognizer = SongRecognizer()
@@ -253,9 +254,10 @@ def main():
             else:
                 st.info("Paroles non disponibles pour cette chanson.")
     else:
-        st.error(
-            "Impossible de reconnaître cette chanson. Veuillez essayer avec un autre fichier audio."
-        )
+        if new_upload or new_recording:
+            st.error(
+                "Impossible de reconnaître cette chanson. Veuillez essayer avec un autre fichier audio."
+            )
 
     footer()
 
