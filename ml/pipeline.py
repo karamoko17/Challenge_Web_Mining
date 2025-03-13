@@ -73,21 +73,28 @@ def recommend_similar_songs(song_name, artist_name, df, df_scaled, kmeans, scale
     
     return recommendations
 
-def visualize_clusters(df_scaled, kmeans):
+def visualize_clusters(df_scaled, kmeans, sample_size=1000):
     # Réduction de dimensionnalité pour la visualisation des clusters (PCA)
     pca = PCA(n_components=2)
     reduced_data = pca.fit_transform(df_scaled)
-    
+
+    # Échantillonnage des données pour l'affichage
+    if len(reduced_data) > sample_size:
+        indices = np.random.choice(len(reduced_data), sample_size, replace=False)
+        reduced_data = reduced_data[indices]
+        labels = kmeans.labels_[indices]
+    else:
+        labels = kmeans.labels_
+
     # Visualisation
     plt.figure(figsize=(10, 6))
-    plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c=kmeans.labels_, cmap='viridis', s=50, alpha=0.6)
-    plt.title("Visualisation des clusters")
+    plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c=labels, cmap='viridis', s=50, alpha=0.6)
+    plt.title("Visualisation des clusters (échantillonnage)")
     plt.xlabel("Composant principal 1")
     plt.ylabel("Composant principal 2")
     plt.colorbar(label="Cluster ID")
     plt.show()
-
-
+    
 # Chargement des données
 df = pd.read_csv(
     "D:\\M2 SISE\\Web Mining\\Challenge_Web_Mining\\Data\\tcc_ceds_music.csv",
@@ -110,6 +117,7 @@ song_name = "the dogs of war"
 artist_name = "pink floyd"  
 recommendations = recommend_similar_songs(song_name, artist_name, df, df_scaled, kmeans, scaler)
 
-# Visualisation des clusters
-visualize_clusters(df_scaled, kmeans)
+
+# Appel avec un échantillon de 1000 points
+visualize_clusters(df_scaled, kmeans, sample_size=1000)
 
