@@ -1,10 +1,8 @@
 import os
 
 import lyricsgenius
-import spotipy
 from dotenv import load_dotenv
 from shazamio import Shazam
-from spotipy.oauth2 import SpotifyClientCredentials
 
 import streamlit as st
 
@@ -12,22 +10,11 @@ import streamlit as st
 # Load environment variables from .env file for local development
 load_dotenv()
 
-# Configuration des clés API from environment variables or GitHub Secrets
-SPOTIFY_ID = os.environ.get("SPOTIFY_ID")
-SPOTIFY_SECRET = os.environ.get("SPOTIFY_SECRET")
-GENIUS_TOKEN = os.environ.get("GENIUS_TOKEN")
-
 # Verify if credentials are available
-if not all([SPOTIFY_ID, SPOTIFY_SECRET, GENIUS_TOKEN]):
-    # Try getting from Streamlit secrets if environment variables are not set
-    SPOTIFY_ID = st.secrets.get("SPOTIFY_ID", SPOTIFY_ID)
-    SPOTIFY_SECRET = st.secrets.get("SPOTIFY_SECRET", SPOTIFY_SECRET)
-    GENIUS_TOKEN = st.secrets.get("GENIUS_TOKEN", GENIUS_TOKEN)
+# Use Streamlit secrets if environment variable is not set
+GENIUS_TOKEN = os.environ.get("GENIUS_TOKEN") or st.secrets.get("GENIUS_TOKEN", "")
 
 # Initialisation des clients API
-spotify = spotipy.Spotify(
-    client_credentials_manager=SpotifyClientCredentials(SPOTIFY_ID, SPOTIFY_SECRET)
-)
 genius = lyricsgenius.Genius(GENIUS_TOKEN)
 shazam = Shazam()
 
@@ -43,9 +30,7 @@ class SongRecognizer:
             "releasedate": "",
             "genre": "",
             "lyrics": "",
-            "popularity": "",
             "id_shazam": "",
-            "id_spotify": "",
             "duration_sec": "",
         }
 
@@ -54,6 +39,7 @@ class SongRecognizer:
         try:
             # Reconnaissance Shazam
             result = await shazam.recognize_song(file_path)
+            print(result)
 
             if not result.get("track"):
                 print("Aucune chanson reconnue")
@@ -61,9 +47,6 @@ class SongRecognizer:
 
             # Extraction des données Shazam
             self._extract_shazam_data(result)
-
-            # Enrichissement avec Spotify
-            self._enrich_with_spotify()
 
             # Récupération des paroles
             self._get_lyrics()
@@ -77,11 +60,14 @@ class SongRecognizer:
     def _extract_shazam_data(self, result):
         """Extrait les données pertinentes depuis le résultat Shazam"""
         track_data = result["track"]
+        print(track_data)
 
         # Informations de base
         self.track_info["title"] = track_data.get("title", "Unknown Title")
         self.track_info["artist"] = track_data.get("subtitle", "Unknown Artist")
-        self.track_info["coverart"] = track_data.get("images", {}).get("coverart", "")
+        self.track_info["coverarthq"] = track_data.get("images", {}).get(
+            "coverarthq", ""
+        )
         self.track_info["id_shazam"] = result.get("matches", [{}])[0].get(
             "id", "Unknown"
         )
@@ -99,39 +85,18 @@ class SongRecognizer:
             elif item.get("title") == "Released":
                 self.track_info["releasedate"] = item.get("text", "Unknown")
 
-    def _enrich_with_spotify(self):
-        """Enrichit les informations de la chanson avec les données Spotify"""
-        try:
-            # Recherche sur Spotify
-            query = (
-                f"track:{self.track_info['title']} artist:{self.track_info['artist']}"
+        # Extraction de l'url Apple permettant de jouer un extrait de la musique
+        if "hub" in track_data:
+            action = next(
+                (
+                    a
+                    for a in track_data["hub"].get("actions", [])
+                    if a.get("type") == "uri"
+                ),
+                None,
             )
-            if self.track_info["album"]:
-                query += f" album:{self.track_info['album']}"
-
-            results = spotify.search(q=query, type="track", limit=1)
-
-            if not results["tracks"]["items"]:
-                print("Chanson non trouvée sur Spotify")
-                return
-
-            track_result = results["tracks"]["items"][0]
-            artist_info = spotify.artist(track_result["artists"][0]["id"])
-
-            # Mise à jour des informations
-            self.track_info["popularity"] = track_result.get("popularity", "N/A")
-            self.track_info["id_spotify"] = track_result["id"]
-            self.track_info["duration_sec"] = track_result["duration_ms"] / 1000
-
-            # Compléter les genres si disponibles
-            if artist_info.get("genres"):
-                if self.track_info["genre"] == "Unknown":
-                    self.track_info["genre"] = ", ".join(artist_info["genres"])
-                else:
-                    self.track_info["genre"] += f" + {', '.join(artist_info['genres'])}"
-
-        except Exception as e:
-            print(f"Erreur lors de l'enrichissement Spotify: {e}")
+            if action:
+                self.track_info["audio_preview_url"] = action.get("uri", "")
 
     def _get_lyrics(self):
         """Récupère les paroles de la chanson via Genius"""

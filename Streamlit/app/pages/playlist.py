@@ -11,22 +11,20 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from SongRecognizer import SongRecognizer
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layout="wide")
 
-# Mettre dans un df pandas le fichier csv des chansons
 csv_path = os.path.join(os.path.dirname(__file__), "tcc_ceds_music.csv")
 df = pd.read_csv(csv_path)
 
 
-# Fonction pour traiter la reconnaissance de manière asynchrone
 async def process_recognition(file_path):
     recognizer = SongRecognizer()
     success = await recognizer.recognize_from_file(file_path)
     return success, recognizer.track_info if success else None
 
 
-# Fonction d'exécution synchrone pour Streamlit
 def run_async(coroutine):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -55,7 +53,6 @@ def preprocess_data(df):
     df_categorical = encoder.fit_transform(df[categorical_features])
 
     df_scaled = np.hstack((df_numeric_scaled, df_categorical))
-
     return df_scaled, scaler, encoder
 
 
@@ -74,7 +71,6 @@ def recommend_similar_songs(
 
     song_index = match.index[0]
     song_cluster = kmeans.labels_[song_index]
-
     similar_songs = df[kmeans.labels_ == song_cluster]
 
     song_features = df_scaled[song_index].reshape(1, -1)
@@ -91,7 +87,6 @@ def recommend_similar_songs(
     recommendations = similar_songs.sort_values("distance").head(n_recommendations)[
         ["artist_name", "track_name"]
     ]
-
     return recommendations
 
 
@@ -152,83 +147,114 @@ def main():
         )
 
     with col2:
-        st.write("**:green[Or record a 5 seconds clip to recognize the song:]** 🎤")
-        audio_bytes = audio_recorder(
+        # Slider pour les chansons difficiles à reconnaître : augmenter le temps d'écoute dans ce cas
+        # delai = st.slider(
+        #     "Durée de l'enregistrement (en secondes)",
+        #     min_value=5,
+        #     max_value=30,
+        #     value=5,
+        #     step=1,
+        # )
+
+        delai = 5
+
+        st.write(
+            f"**:green[Or record a {delai} seconds clip to recognize the song:]** 🎤"
+        )
+        recorded_audio = audio_recorder(
             text="",
             recording_color="red",
             neutral_color="#6aa36f",
             icon_name="microphone",
             icon_size="5x",
             energy_threshold=(-1.0, 1.0),
-            pause_threshold=5.0,
+            pause_threshold=delai,
         )
-        uploaded_file = audio_bytes
+    temp_file_path = None
 
-    if uploaded_file is not None:
-        # Créer un fichier temporaire pour stocker l'audio chargé
-        if isinstance(uploaded_file, bytes):
-            # Pour l'audio enregistré via audio_recorder
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                tmp_file.write(uploaded_file)
-                temp_file_path = tmp_file.name
-        else:
-            # Pour les fichiers téléchargés via le file_uploader
-            with tempfile.NamedTemporaryFile(
-                delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
-            ) as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                temp_file_path = tmp_file.name
+    new_upload = uploaded_file is not None and uploaded_file != st.session_state.get(
+        "uploaded_file"
+    )
+    new_recording = (
+        recorded_audio is not None
+        and recorded_audio != st.session_state.get("recorded_audio")
+    )
 
-        # Afficher un message de chargement
+    if new_upload:
+        st.session_state.uploaded_file = uploaded_file
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
+        ) as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            temp_file_path = tmp_file.name
+    elif new_recording:
+        st.session_state.recorded_audio = recorded_audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+            tmp_file.write(recorded_audio)
+            temp_file_path = tmp_file.name
+
+    if temp_file_path:
         with st.spinner("Reconnaissance en cours..."):
-            # Processus de reconnaissance
             success, track_info = run_async(process_recognition(temp_file_path))
-
-        # Supprimer le fichier temporaire
         os.unlink(temp_file_path)
+    else:
+        success, track_info = False, None
 
-        # Afficher les résultats
-        if success:
-            # Créer une disposition à deux colonnes
-            col1, col2 = st.columns([1, 2])
+    if success:
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            if track_info["coverarthq"]:
+                st.image(track_info["coverarthq"], caption="Pochette d'album")
+            st.subheader("Informations")
+            info_md = f"""
+            - **Titre**: {track_info["title"]}
+            - **Artiste**: {track_info["artist"]}
+            - **Album**: {track_info["album"]}
+            - **Label**: {track_info["label"]}
+            - **Date de sortie**: {track_info["releasedate"]}
+            - **Genre**: {track_info["genre"]}
+            """
+            st.markdown(info_md)
 
-            with col1:
-                # Afficher la pochette
-                if track_info["coverart"]:
-                    st.image(track_info["coverart"], caption="Pochette d'album")
+        with col2:
+            st.subheader("Extrait audio")
+            st.audio(track_info["audio_preview_url"], format="audio/mpeg")
+            st.subheader("Paroles")
+            if track_info["lyrics"] and track_info["lyrics"] != "Paroles non trouvées":
+                lyrics = track_info["lyrics"]
+                if "Lyrics" in lyrics and "Embed" in lyrics:
+                    lyrics = lyrics.split("Lyrics")[1].split("Embed")[0].strip()
+                st.text_area("", lyrics, height=500)
 
-                # Informations principales
-                st.subheader("Informations")
-                info_md = f"""
-                - **Titre**: {track_info["title"]}
-                - **Artiste**: {track_info["artist"]}
-                - **Album**: {track_info["album"]}
-                - **Label**: {track_info["label"]}
-                - **Date de sortie**: {track_info["releasedate"]}
-                - **Genre**: {track_info["genre"]}
-                - **Popularité**: {track_info["popularity"]}
-                """
-                st.markdown(info_md)
-
-            with col2:
-                # Afficher les paroles
-                st.subheader("Paroles")
-                if (
-                    track_info["lyrics"]
-                    and track_info["lyrics"] != "Paroles non trouvées"
-                ):
-                    # Nettoyer les paroles (enlever les lignes d'attribution Genius)
-                    lyrics = track_info["lyrics"]
-                    if "Lyrics" in lyrics and "Embed" in lyrics:
-                        lyrics = lyrics.split("Lyrics")[1].split("Embed")[0].strip()
-                    st.text_area("", lyrics, height=500)
-                else:
-                    st.info("Paroles non disponibles pour cette chanson.")
-
-        else:
-            st.error(
-                "Impossible de reconnaître cette chanson. Veuillez essayer avec un autre fichier audio."
-            )
+                # Ajoute un bouton "Copier le contenu" qui copie les paroles dans le presse-papiers
+                escaped_lyrics = lyrics.replace("`", "\\`").replace("'", "\\'")
+                components.html(
+                    f"""
+                    <button 
+                      onclick="navigator.clipboard.writeText(`{escaped_lyrics}`)" 
+                      style="
+                        background-color: #6aa36f;
+                        border: none;
+                        color: white;
+                        padding: 10px 20px;
+                        text-align: center;
+                        text-decoration: none;
+                        display: inline-block;
+                        font-size: 16px;
+                        margin: 4px 2px;
+                        cursor: pointer;
+                      ">
+                      Copier les paroles
+                    </button>
+                    """,
+                    height=50,
+                )
+            else:
+                st.info("Paroles non disponibles pour cette chanson.")
+    else:
+        st.error(
+            "Impossible de reconnaître cette chanson. Veuillez essayer avec un autre fichier audio."
+        )
 
     footer()
 
