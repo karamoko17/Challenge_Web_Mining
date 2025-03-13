@@ -115,6 +115,6 @@ Contributions are welcome! To contribute:
 ## 👥 Authors
 
 - [Awa KARAMOKO](https://github.com/karamoko17)
-- [Bertrand KLEIN]()
+- [Bertrand KLEIN](https://github.com/bertrandklein)
 - [Antoine ORUEZABALA](https://github.com/AntoineORUEZABALA)
 - [Béranger THOMAS](https://github.com/berangerthomas)
