@@ -24,7 +24,7 @@ You can try SISEzam online at our Streamlit.app demo:
 ## 🚀 Installation
 ### Prerequisites
 - Docker installed on your system
-- adding a secrets.toml file under the repository .streamlit with your GENIUS_TOKEN
+- adding a secrets.toml file under the repository .streamlit with your GENIUS_TOKEN and MISTRAL_API_KEY
 - deactivate Windows microphone enhancement if you're planning to use on-the-fly recognition.
 
 ### Quick Start with Docker
