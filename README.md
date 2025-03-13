@@ -27,25 +27,6 @@ You can try SISEzam online at our Streamlit.app demo:
 - adding a secrets.toml file under the repository .streamlit with your GENIUS_TOKEN
 - deactivate Windows microphone enhancement if you're planning to use on-the-fly recognition.
 
-### Quick Start with Docker Image
-If you have a prebuilt "Challenge_Web_Mining.tar" Docker image, you can load and run it as follows:
-1. Load the image:
-   ```bash
-   docker load -i Challenge_Web_Mining.tar
-   ```
-2. Verify the image name (usually "Challenge_Web_Mining") by running:
-   ```bash
-   docker images
-   ```
-3. Run the container:
-   ```bash
-   docker run -p 8501:8501 Challenge_Web_Mining
-   ```
-4. Navigate to:
-   ```
-   http://localhost:8501
-   ```
-
 ### Quick Start with Docker
 1. Clone the repository:
    ```bash
@@ -58,7 +39,7 @@ If you have a prebuilt "Challenge_Web_Mining.tar" Docker image, you can load and
    ```
 3. Run the container:
    ```bash
-   docker run -p 8501:8501 Challenge_Web_Mining
+   docker run -p 8501:8501 -e GENIUS_TOKEN=YOUR_TOKEN Challenge_Web_Mining
    ```
 4. Open your browser and navigate to:
    ```
