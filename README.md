@@ -39,7 +39,7 @@ You can try SISEzam online at our Streamlit.app demo:
    ```
 3. Run the container:
    ```bash
-   docker run -p 8501:8501 -e GENIUS_TOKEN="YOUR_TOKEN" Challenge_Web_Mining
+   docker run -p 8501:8501 -e GENIUS_TOKEN="YOUR_TOKEN" -e MISTRAL_API_KEY="VOTRE_CLE" Challenge_Web_Mining
    ```
 4. Open your browser and navigate to:
    ```

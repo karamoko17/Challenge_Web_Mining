@@ -10,4 +10,5 @@ python-dotenv
 mistralai
 pysqlite3-binary
 chromadb
+hnswlib
 
