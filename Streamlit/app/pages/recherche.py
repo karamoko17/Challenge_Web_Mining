@@ -68,5 +68,4 @@ results = search_song(query, top_k=5)
 
 print("\n🔎 Résultats de la recherche :\n")
 for i, row in results.iterrows():
-    print(f"{i+1}. {row['track_name']} - {row['artist_name']} (Similarité: {row['similarity']:.2f})")
-    print(f"   🎵 Paroles : {row['lyrics'][:200]}...\n")
+    print(f"{i+1}. {row['track_name']} - {row['artist_name']} (Similarité: {row['similarity']:.2f})")    
