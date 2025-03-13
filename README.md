@@ -18,6 +18,8 @@ SISE'zam is a music recognition application that goes beyond simple track identi
 ## 🚀 Installation
 ### Prerequisites
 - Docker installed on your system
+- adding a secrets.toml file under the repository .streamlit with your GENIUS_TOKEN
+- deactivate Windows microphone enhancement if you're planning to use on-the-fly recognition.
 
 ### Quick Start with Docker Image
 If you have a prebuilt "Challenge_Web_Mining.tar" Docker image, you can load and run it as follows:
