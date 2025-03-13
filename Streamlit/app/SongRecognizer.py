@@ -99,10 +99,10 @@ class SongRecognizer:
                 self.track_info["audio_preview_url"] = action.get("uri", "")
 
     def _get_lyrics(self):
-        """Récupère les paroles de la chanson via Genius avec jusqu'à 5 essais en cas de timeout"""
-        attempts = 0
+        """Récupère les paroles de la chanson via Genius avec jusqu'à 5 essais"""
         max_attempts = 5
-        while attempts < max_attempts:
+
+        for attempt in range(max_attempts):
             try:
                 song = genius.search_song(
                     self.track_info["title"], self.track_info["artist"]
@@ -111,23 +111,11 @@ class SongRecognizer:
                     self.track_info["lyrics"] = song.lyrics
                 else:
                     self.track_info["lyrics"] = "Paroles non trouvées"
-                break
+                return  # Success, exit method
             except Exception as e:
-                # Si l'erreur est un timeout Genius, on retente jusqu'à 5 fois
-                if (
-                    "Request timed out: HTTPSConnectionPool(host='api.genius.com', port=443): Read timed out. (read timeout=5)"
-                    in str(e)
-                ):
-                    attempts += 1
-                    if attempts == max_attempts:
-                        print(f"Erreur lors de la récupération des paroles: {e}")
-                        self.track_info["lyrics"] = (
-                            f"Erreur lors de la récupération des paroles: {e}"
-                        )
-                else:
-                    # Autre type d'erreur => on arrête
-                    print(f"Erreur lors de la récupération des paroles: {e}")
+                print(f"Tentative {attempt + 1}/{max_attempts} échouée: {e}")
+                if attempt == max_attempts - 1:
+                    # Last attempt failed
                     self.track_info["lyrics"] = (
                         f"Erreur lors de la récupération des paroles: {e}"
                     )
-                    break
