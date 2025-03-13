@@ -9,3 +9,4 @@ audio_recorder_streamlit
 python-dotenv
 mistralai
 chromadb
+python-3.10
