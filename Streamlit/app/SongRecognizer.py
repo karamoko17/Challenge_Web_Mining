@@ -1,9 +1,11 @@
+import os
+
 import lyricsgenius
 import spotipy
+from dotenv import load_dotenv
 from shazamio import Shazam
 from spotipy.oauth2 import SpotifyClientCredentials
-import os
-from dotenv import load_dotenv
+
 import streamlit as st
 
 # Configuration des clés API
@@ -145,4 +147,6 @@ class SongRecognizer:
 
         except Exception as e:
             print(f"Erreur lors de la récupération des paroles: {e}")
-            self.track_info["lyrics"] = "Erreur lors de la récupération des paroles"
+            self.track_info["lyrics"] = (
+                f"Erreur lors de la récupération des paroles: {e}"
+            )

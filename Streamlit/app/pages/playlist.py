@@ -3,6 +3,8 @@ import os
 import tempfile
 
 import numpy as np
+import pandas as pd
+from audio_recorder_streamlit import audio_recorder
 from pages.ressources.components import Navbar, apply_custom_css, footer
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -11,6 +13,10 @@ from SongRecognizer import SongRecognizer
 import streamlit as st
 
 st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layout="wide")
+
+# Mettre dans un df pandas le fichier csv des chansons
+csv_path = os.path.join(os.path.dirname(__file__), "tcc_ceds_music.csv")
+df = pd.read_csv(csv_path)
 
 
 # Fonction pour traiter la reconnaissance de manière asynchrone
@@ -137,17 +143,41 @@ def main():
         unsafe_allow_html=True,
     )
 
-    uploaded_file = st.file_uploader(
-        "**:green[Upload your music file here]** 🎵",
-        type=["mp3", "wav", "flac", "m4a", "ogg"],
-    )
+    col1, col2 = st.columns(2)
+
+    with col1:
+        uploaded_file = st.file_uploader(
+            "**:green[Upload your music file here]** 🎵",
+            type=["mp3", "wav", "flac", "m4a", "ogg"],
+        )
+
+    with col2:
+        st.write("**:green[Or record a 5 seconds clip to recognize the song:]** 🎤")
+        audio_bytes = audio_recorder(
+            text="",
+            recording_color="red",
+            neutral_color="#6aa36f",
+            icon_name="microphone",
+            icon_size="5x",
+            energy_threshold=(-1.0, 1.0),
+            pause_threshold=5.0,
+        )
+        uploaded_file = audio_bytes
+
     if uploaded_file is not None:
         # Créer un fichier temporaire pour stocker l'audio chargé
-        with tempfile.NamedTemporaryFile(
-            delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
-        ) as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            temp_file_path = tmp_file.name
+        if isinstance(uploaded_file, bytes):
+            # Pour l'audio enregistré via audio_recorder
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
+                tmp_file.write(uploaded_file)
+                temp_file_path = tmp_file.name
+        else:
+            # Pour les fichiers téléchargés via le file_uploader
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=os.path.splitext(uploaded_file.name)[1]
+            ) as tmp_file:
+                tmp_file.write(uploaded_file.getvalue())
+                temp_file_path = tmp_file.name
 
         # Afficher un message de chargement
         with st.spinner("Reconnaissance en cours..."):
@@ -199,21 +229,6 @@ def main():
             st.error(
                 "Impossible de reconnaître cette chanson. Veuillez essayer avec un autre fichier audio."
             )
-        # df = pd.read_csv(io.StringIO(uploaded_file.getvalue().decode("utf-8")))
-
-        # df_scaled, scaler, encoder = preprocess_data(df)
-        # kmeans, clusters = train_clustering_model(df_scaled, n_clusters=10)
-        # df["cluster"] = clusters
-
-        # song_name = st.text_input("Enter the song name:")
-        # artist_name = st.text_input("Enter the artist name:")
-
-        # if song_name and artist_name:
-        #     recommendations = recommend_similar_songs(
-        #         song_name, artist_name, df, df_scaled, kmeans, scaler
-        #     )
-        #     st.write("Recommended Playlist:")
-        #     st.write(recommendations)
 
     footer()
 
