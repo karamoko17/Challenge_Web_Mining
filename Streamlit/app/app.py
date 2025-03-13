@@ -14,14 +14,14 @@ def main():
         """
     <div style='text-align: center; margin-bottom: 30px;'>
         <h1 style='font-family: helvetica, sans-serif; font-size: 2.5rem;'>
-            <span style='background: linear-gradient(90deg, white, #00f2ff);
+            <span style='background: linear-gradient(90deg, white, #ff69b4);
                          -webkit-background-clip: text;
                          -webkit-text-fill-color: transparent;
                          background-clip: text;
                          color: white;'>
                 PLAYLIST
             </span>
-            <span style='background: linear-gradient(90deg, #3ed60f, white);
+            <span style='background: linear-gradient(90deg, #ff69b4, white);
                          -webkit-background-clip: text;
                          -webkit-text-fill-color: transparent;
                          background-clip: text;
@@ -31,10 +31,10 @@ def main():
         </h1>
         <div style='display: flex; justify-content: center; gap: 10px; margin-top: -10px;'>
             <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #00f2ff, rgba(255,255,255,0));'></div>
-            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #3ed60f, rgba(255,255,255,0));'></div>
+            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #ff69b4, rgba(255,255,255,0));'></div>
         </div>
         <p style='color: #00f2ff; font-family: helvetica; letter-spacing: 2px; margin-top: 5px;'>
-            INTELLIGENT <span style='color: #3ed60f;'>PLAYLIST</span> GENERATION
+            INTELLIGENT <span style='color: #ff69b4;'>PLAYLIST</span> GENERATION
         </p>
     </div>
     """,
