@@ -54,7 +54,7 @@ If you have a prebuilt "Challenge_Web_Mining.tar" Docker image, you can load and
    ```
 2. Build the Docker image:
    ```bash
-   docker build -t Challenge_Web_Mining .
+   docker build -t challenge_web_mining .
    ```
 3. Run the container:
    ```bash
