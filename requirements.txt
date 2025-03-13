@@ -8,4 +8,7 @@ streamlit
 audio_recorder_streamlit
 python-dotenv
 mistralai
+pysqlite3-binary
 chromadb
+hnswlib
+

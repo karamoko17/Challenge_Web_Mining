@@ -17,20 +17,16 @@ from mistralai import Mistral
 
 st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layout="wide")
 
-api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
+# api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY") or st.secrets.get("MISTRAL_API_KEY", "")
 model = "mistral-embed"
-client = Mistral(api_key=api_key)
+client = Mistral(api_key=MISTRAL_API_KEY)
 # Créer un client ChromaDB
 chroma_client = chromadb.PersistentClient(path="./Streamlit/app/data/chroma_db")
 
 # Collection pour les embeddings musicaux
 music_collection = chroma_client.get_or_create_collection(name="musiques")
 collections = chroma_client.list_collections()
-
-
-# # Mettre dans un df pandas le fichier csv des chansons
-# csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "tcc_ceds_music.csv")
-# df = pd.read_csv(csv_path)
 
 
 # Fonction pour traiter la reconnaissance de manière asynchrone
@@ -47,69 +43,11 @@ def run_async(coroutine):
     loop.close()
     return result
 
-
-def preprocess_data(df):
-    numeric_features = [
-        "danceability",
-        "loudness",
-        "acousticness",
-        "instrumentalness",
-        "valence",
-        "energy",
-        "release_date",
-    ]
-    categorical_features = ["topic", "genre"]
-
-    df_numeric = df[numeric_features].fillna(0)
-    scaler = StandardScaler()
-    df_numeric_scaled = scaler.fit_transform(df_numeric)
-
-    encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
-    df_categorical = encoder.fit_transform(df[categorical_features])
-
-    df_scaled = np.hstack((df_numeric_scaled, df_categorical))
-    return df_scaled, scaler, encoder
-
-
-def train_clustering_model(df_scaled, n_clusters=10):
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-    clusters = kmeans.fit_predict(df_scaled)
-    return kmeans, clusters
-
-
-def recommend_similar_songs(
-    song_name, artist_name, df, df_scaled, kmeans, scaler, n_recommendations=15
-):
-    match = df[(df["track_name"] == song_name) & (df["artist_name"] == artist_name)]
-    if match.empty:
-        return "Chanson non trouvée dans la base de données."
-
-    song_index = match.index[0]
-    song_cluster = kmeans.labels_[song_index]
-    similar_songs = df[kmeans.labels_ == song_cluster]
-
-    song_features = df_scaled[song_index].reshape(1, -1)
-    distances = np.linalg.norm(
-        df_scaled[kmeans.labels_ == song_cluster] - song_features, axis=1
-    )
-    similar_songs["distance"] = distances
-
-    similar_songs = similar_songs[
-        (similar_songs["track_name"] != song_name)
-        | (similar_songs["artist_name"] != artist_name)
-    ]
-
-    recommendations = similar_songs.sort_values("distance").head(n_recommendations)[
-        ["artist_name", "track_name"]
-    ]
-    return recommendations
-
 def get_playlist(song_lyrics, genre, playlist_size = 15):
     response = client.embeddings.create(
         model=model,
         inputs=[song_lyrics],
     ) 
-    # print(response)
     results_music = music_collection.query(
         query_embeddings=[response.data[0].embedding], 
         n_results=playlist_size,
@@ -118,7 +56,6 @@ def get_playlist(song_lyrics, genre, playlist_size = 15):
     print(results_music)
     # Convertir les listes en dictionnaires
     playlist = results_music["metadatas"][0]
-
     return playlist
 
 def main():
@@ -322,7 +259,7 @@ def main():
 
             for i, song in enumerate(playlist):
                 st.markdown(
-                    f"<tr><td>{i+1}</td><td>{song['artist_name']}</td><td>{song['track_name']}</td><td>{song['genre']}</td></tr>",
+                    f"<tr><td>{i+1}</td><td>{song['artist_name']}</td><td>{song['track_name']}</td><td><audio controls><source src='{song['url_preview']}' type='audio/mpeg'></audio></td></tr>",
                     unsafe_allow_html=True,
                 )
 
