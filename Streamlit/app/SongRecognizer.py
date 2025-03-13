@@ -61,7 +61,6 @@ class SongRecognizer:
     def _extract_shazam_data(self, result):
         """Extrait les données pertinentes depuis le résultat Shazam"""
         track_data = result["track"]
-        print(track_data)
 
         # Informations de base
         self.track_info["title"] = track_data.get("title", "Unknown Title")
