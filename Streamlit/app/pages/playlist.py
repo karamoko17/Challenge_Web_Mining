@@ -100,14 +100,14 @@ def main():
         """
     <div style='text-align: center; margin-bottom: 30px;'>
         <h1 style='font-family: helvetica, sans-serif; font-size: 2.5rem;'>
-            <span style='background: linear-gradient(90deg, white, #00f2ff);
+            <span style='background: linear-gradient(90deg, white, #ff69b4);
                          -webkit-background-clip: text;
                          -webkit-text-fill-color: transparent;
                          background-clip: text;
                          color: white;'>
                 PLAYLIST
             </span>
-            <span style='background: linear-gradient(90deg, #3ed60f, white);
+            <span style='background: linear-gradient(90deg, #ff69b4, white);
                          -webkit-background-clip: text;
                          -webkit-text-fill-color: transparent;
                          background-clip: text;
@@ -117,10 +117,10 @@ def main():
         </h1>
         <div style='display: flex; justify-content: center; gap: 10px; margin-top: -10px;'>
             <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #00f2ff, rgba(255,255,255,0));'></div>
-            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #3ed60f, rgba(255,255,255,0));'></div>
+            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #ff69b4, rgba(255,255,255,0));'></div>
         </div>
         <p style='color: #00f2ff; font-family: helvetica; letter-spacing: 2px; margin-top: 5px;'>
-            INTELLIGENT <span style='color: #3ed60f;'>PLAYLIST</span> GENERATION
+            INTELLIGENT <span style='color: #ff69b4;'>PLAYLIST</span> GENERATION
         </p>
     </div>
     """,
@@ -144,18 +144,20 @@ def main():
 
     with col1:
         uploaded_file = st.file_uploader(
-            "**:green[Upload your music file here]** 🎵",
+            "**Upload your music file here** 🎵",
             type=["mp3", "wav", "flac", "m4a", "ogg"],
         )
 
     with col2:
         delai = 5
 
-        st.write(f"**:green[Or record a {delai}-second clip to identify it]** 🎤")
+        st.write(
+            f"**Or record a {delai} seconds clip to recognize the song:** 🎤"
+        )
         recorded_audio = audio_recorder(
             text="",
-            recording_color="red",
-            neutral_color="#6aa36f",
+            recording_color="#ff69b4",
+            neutral_color="#ffb6c1",
             icon_name="microphone",
             icon_size="5x",
             energy_threshold=(-1.0, 1.0),

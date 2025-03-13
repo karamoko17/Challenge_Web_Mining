@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from pages.ressources.components import Navbar, apply_custom_css, footer
 
+st.set_page_config(page_title="Analyse des embeddings", page_icon="📊", layout="wide")
+
 def calculate_song_embedding(audio_features):
     """
     Convert audio features into an embedding vector
@@ -60,15 +62,41 @@ def show_embeddings_page():
     st.header("Embedding Visualizations")
     st.info("Interactive visualizations of song embeddings will be added here")
 
-    def main():
-        apply_custom_css()
-        Navbar()
-
-        footer()
-
-
-    if __name__ == "__main__":
-        main()
+def main():
+    apply_custom_css()
+    Navbar()
+    st.markdown(
+        """
+    <div style='text-align: center; margin-bottom: 30px;'>
+        <h1 style='font-family: helvetica, sans-serif; font-size: 2.5rem;'>
+            <span style='background: linear-gradient(90deg, white, #ff69b4);
+                         -webkit-background-clip: text;
+                         -webkit-text-fill-color: transparent;
+                         background-clip: text;
+                         color: white;'>
+                PLAYLIST
+            </span>
+            <span style='background: linear-gradient(90deg, #ff69b4, white);
+                         -webkit-background-clip: text;
+                         -webkit-text-fill-color: transparent;
+                         background-clip: text;
+                         color: white;'>
+                CLUSTOM
+            </span>
+        </h1>
+        <div style='display: flex; justify-content: center; gap: 10px; margin-top: -10px;'>
+            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #00f2ff, rgba(255,255,255,0));'></div>
+            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #ff69b4, rgba(255,255,255,0));'></div>
+        </div>
+        <p style='color: #00f2ff; font-family: helvetica; letter-spacing: 2px; margin-top: 5px;'>
+            INTELLIGENT <span style='color: #ff69b4;'>PLAYLIST</span> GENERATION
+        </p>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
+    show_embeddings_page()
+    footer()
 
 if __name__ == "__main__":
-    show_embeddings_page()
+    main()
