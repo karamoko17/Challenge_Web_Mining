@@ -1,14 +1,17 @@
-import streamlit as st
 from pages.ressources.components import Navbar, apply_custom_css, footer
 
+import streamlit as st
+
 st.set_page_config(page_title="Playlist Clustom", page_icon="💿", layout="wide")
+
 
 def main():
     apply_custom_css()
     Navbar()
-    
+
     # Header with enhanced styling
-    st.markdown("""
+    st.markdown(
+        """
     <div style='text-align: center; margin-bottom: 30px;'>
         <h1 style='font-family: helvetica, sans-serif; font-size: 2.5rem;'>
             <span style='background: linear-gradient(90deg, white, #00f2ff);
@@ -34,9 +37,12 @@ def main():
             INTELLIGENT <span style='color: #3ed60f;'>PLAYLIST</span> GENERATION
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("""
+    st.markdown(
+        """
     <style>
         /* Glitch overlay effect */
         body::before {
@@ -89,9 +95,12 @@ def main():
             z-index: 9998;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     # Create a styled grid layout
-    st.markdown("""
+    st.markdown(
+        """
     <div style='background-color: #1f2430; padding: 20px; border-radius: 5px; border: 1px solid rgba(0, 242, 255, 0.3);'>
         <h3 style='color: #00f2ff; text-shadow: 0 0 10px rgba(0, 255, 198, 0.7), 0 0 20px rgba(0, 255, 198, 0.4);'>Welcome to Playlist Clustom. </h3>
         <p>This system provides personnalized playlists thanks to clustering and embeddings based on a song that you'll give us.</p>
@@ -102,10 +111,13 @@ def main():
         <li>Clustering KMeans to select songs</li>
         <li>NLP Analysis with embeddings</li>
         </ul>
-        <p>To get started, upload your song file.</p>
+        <p>To get started, upload your song file or record a 5 seconds clip.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     footer()
+
 
 if __name__ == "__main__":
     main()
