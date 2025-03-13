@@ -149,20 +149,9 @@ def main():
         )
 
     with col2:
-        # Slider pour les chansons difficiles à reconnaître : augmenter le temps d'écoute dans ce cas
-        # delai = st.slider(
-        #     "Durée de l'enregistrement (en secondes)",
-        #     min_value=5,
-        #     max_value=30,
-        #     value=5,
-        #     step=1,
-        # )
-
         delai = 5
 
-        st.write(
-            f"**:green[Or record a {delai} seconds clip to recognize the song:]** 🎤"
-        )
+        st.write(f"**:green[Or record a {delai}-second clip to identify it]** 🎤")
         recorded_audio = audio_recorder(
             text="",
             recording_color="red",
@@ -208,10 +197,16 @@ def main():
             if track_info["coverarthq"]:
                 st.image(track_info["coverarthq"], caption="Pochette d'album")
             st.subheader("Informations")
+            album_display = (
+                f"[{track_info['album']}]({track_info['album_url']})"
+                if "album_url" in track_info and track_info["album_url"]
+                else track_info["album"]
+            )
+
             info_md = f"""
             - **Titre**: {track_info["title"]}
             - **Artiste**: {track_info["artist"]}
-            - **Album**: {track_info["album"]}
+            - **Album**: {album_display}
             - **Label**: {track_info["label"]}
             - **Date de sortie**: {track_info["releasedate"]}
             - **Genre**: {track_info["genre"]}

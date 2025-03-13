@@ -26,12 +26,14 @@ class SongRecognizer:
             "artist": "",
             "album": "",
             "label": "",
-            "coverart": "",
+            "coverarthq": "",
             "releasedate": "",
             "genre": "",
             "lyrics": "",
             "id_shazam": "",
             "duration_sec": "",
+            "audio_preview_url": "",
+            "album_url": "",
         }
 
     async def recognize_from_file(self, file_path):
@@ -39,7 +41,6 @@ class SongRecognizer:
         try:
             # Reconnaissance Shazam
             result = await shazam.recognize_song(file_path)
-            print(result)
 
             if not result.get("track"):
                 print("Aucune chanson reconnue")
@@ -97,6 +98,17 @@ class SongRecognizer:
             )
             if action:
                 self.track_info["audio_preview_url"] = action.get("uri", "")
+
+        # Extract the album URL from Apple Music
+        if "hub" in track_data:
+            # Look through the options in the hub
+            for option in track_data.get("hub", {}).get("options", []):
+                # Look for the actions in the option
+                for action in option.get("actions", []):
+                    # Find the action with type applemusicopen
+                    if action.get("type") == "applemusicopen":
+                        self.track_info["album_url"] = action.get("uri", "")
+                        break
 
     def _get_lyrics(self):
         """Récupère les paroles de la chanson via Genius avec jusqu'à 5 essais"""
