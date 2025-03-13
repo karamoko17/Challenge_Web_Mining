@@ -19,14 +19,7 @@ def main():
                          -webkit-text-fill-color: transparent;
                          background-clip: text;
                          color: white;'>
-                PLAYLIST
-            </span>
-            <span style='background: linear-gradient(90deg, #ff69b4, white);
-                         -webkit-background-clip: text;
-                         -webkit-text-fill-color: transparent;
-                         background-clip: text;
-                         color: white;'>
-                CLUSTOM
+                SISEZAM
             </span>
         </h1>
         <div style='display: flex; justify-content: center; gap: 10px; margin-top: -10px;'>
