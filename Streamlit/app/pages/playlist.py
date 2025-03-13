@@ -142,7 +142,7 @@ def main():
         )
 
     with col2:
-        delai = 5
+        delai = 15
 
         st.write(
             f"**Or record a {delai} seconds clip to recognize the song:** 🎤"
