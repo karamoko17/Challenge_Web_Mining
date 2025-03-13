@@ -15,10 +15,11 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layout="wide")
 
-csv_path = os.path.join(os.path.dirname(__file__), "tcc_ceds_music.csv")
+# Mettre dans un df pandas le fichier csv des chansons
+csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "tcc_ceds_music.csv")
 df = pd.read_csv(csv_path)
 
-
+# Fonction pour traiter la reconnaissance de manière asynchrone
 async def process_recognition(file_path):
     recognizer = SongRecognizer()
     success = await recognizer.recognize_from_file(file_path)
