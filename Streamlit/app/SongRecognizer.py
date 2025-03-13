@@ -71,8 +71,8 @@ class SongRecognizer:
         self.track_info["id_shazam"] = result.get("matches", [{}])[0].get(
             "id", "Unknown"
         )
-        self.track_info["genre"] = track_data.get("genres", {}).get(
-            "primary", "Unknown"
+        self.track_info["genre"] = (
+            track_data.get("genres", {}).get("primary", "Unknown").split("/")[0]
         )
 
         # Extraction des métadonnées
