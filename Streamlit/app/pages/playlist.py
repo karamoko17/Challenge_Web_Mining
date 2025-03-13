@@ -12,12 +12,25 @@ from SongRecognizer import SongRecognizer
 
 import streamlit as st
 import streamlit.components.v1 as components
+import chromadb
+from mistralai import Mistral
 
 st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layout="wide")
 
-# Mettre dans un df pandas le fichier csv des chansons
-csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "tcc_ceds_music.csv")
-df = pd.read_csv(csv_path)
+api_key = "RXjfbTO7wkOU0RwrwP7XpFfcj1K5eq40"
+model = "mistral-embed"
+client = Mistral(api_key=api_key)
+# Créer un client ChromaDB
+chroma_client = chromadb.PersistentClient(path="./Streamlit/app/data/chroma_db")
+
+# Collection pour les embeddings musicaux
+music_collection = chroma_client.get_or_create_collection(name="musiques")
+collections = chroma_client.list_collections()
+
+
+# # Mettre dans un df pandas le fichier csv des chansons
+# csv_path = os.path.join(os.path.dirname(__file__), "..", "data", "tcc_ceds_music.csv")
+# df = pd.read_csv(csv_path)
 
 
 # Fonction pour traiter la reconnaissance de manière asynchrone
@@ -91,6 +104,22 @@ def recommend_similar_songs(
     ]
     return recommendations
 
+def get_playlist(song_lyrics, genre, playlist_size = 15):
+    response = client.embeddings.create(
+        model=model,
+        inputs=[song_lyrics],
+    ) 
+    # print(response)
+    results_music = music_collection.query(
+        query_embeddings=[response.data[0].embedding], 
+        n_results=playlist_size,
+        where={"genre" : genre}
+    )
+    print(results_music)
+    # Convertir les listes en dictionnaires
+    playlist = results_music["metadatas"][0]
+
+    return playlist
 
 def main():
     apply_custom_css()
@@ -100,20 +129,27 @@ def main():
         """
     <div style='text-align: center; margin-bottom: 30px;'>
         <h1 style='font-family: helvetica, sans-serif; font-size: 2.5rem;'>
-            <span style='background: linear-gradient(90deg, white, #ff69b4);
+            <span style='background: linear-gradient(90deg, white, #00f2ff);
                          -webkit-background-clip: text;
                          -webkit-text-fill-color: transparent;
                          background-clip: text;
                          color: white;'>
-                SISEZAM
+                PLAYLIST
+            </span>
+            <span style='background: linear-gradient(90deg, #3ed60f, white);
+                         -webkit-background-clip: text;
+                         -webkit-text-fill-color: transparent;
+                         background-clip: text;
+                         color: white;'>
+                CLUSTOM
             </span>
         </h1>
         <div style='display: flex; justify-content: center; gap: 10px; margin-top: -10px;'>
             <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #00f2ff, rgba(255,255,255,0));'></div>
-            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #ff69b4, rgba(255,255,255,0));'></div>
+            <div style='height: 2px; width: 100px; background: linear-gradient(90deg, rgba(255,255,255,0), #3ed60f, rgba(255,255,255,0));'></div>
         </div>
         <p style='color: #00f2ff; font-family: helvetica; letter-spacing: 2px; margin-top: 5px;'>
-            INTELLIGENT <span style='color: #ff69b4;'>PLAYLIST</span> GENERATION
+            INTELLIGENT <span style='color: #3ed60f;'>PLAYLIST</span> GENERATION
         </p>
     </div>
     """,
@@ -137,20 +173,18 @@ def main():
 
     with col1:
         uploaded_file = st.file_uploader(
-            "**Upload your music file here** 🎵",
+            "**:green[Upload your music file here]** 🎵",
             type=["mp3", "wav", "flac", "m4a", "ogg"],
         )
 
     with col2:
         delai = 15
 
-        st.write(
-            f"**Or record a {delai} seconds clip to recognize the song:** 🎤"
-        )
+        st.write(f"**:green[Or record a {delai}-second clip to identify it]** 🎤")
         recorded_audio = audio_recorder(
             text="",
-            recording_color="#ff69b4",
-            neutral_color="#ffb6c1",
+            recording_color="red",
+            neutral_color="#6aa36f",
             icon_name="microphone",
             icon_size="5x",
             energy_threshold=(-1.0, 1.0),
@@ -243,6 +277,58 @@ def main():
                 )
             else:
                 st.info("Paroles non disponibles pour cette chanson.")
+        # 🎵 Génération et affichage de la playlist
+
+        st.subheader("🎶 Playlist recommandée")
+
+        # Récupérer la playlist à partir des paroles et du genre de la chanson actuelle
+        playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=10)
+        print(track_info["lyrics"])
+        print(track_info["genre"].lower())
+        print(playlist)
+        if playlist:
+            # Création d'un tableau stylisé avec Streamlit
+            st.markdown(
+                """
+                <style>
+                    .playlist-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-family: Arial, sans-serif;
+                        background-color: #1db954;
+                        color: white;
+                        text-align: left;
+                        border-radius: 10px;
+                        overflow: hidden;
+                    }
+                    .playlist-table th, .playlist-table td {
+                        padding: 10px;
+                        border-bottom: 1px solid #ffffff55;
+                    }
+                    .playlist-table tr:hover {
+                        background-color: #1ed760;
+                    }
+                    .playlist-table th {
+                        background-color: #128c7e;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            # Affichage de la table
+            st.markdown("<table class='playlist-table'>", unsafe_allow_html=True)
+            st.markdown("<tr><th>#</th><th>Artiste</th><th>Track</th><th>Genre</th></tr>", unsafe_allow_html=True)
+
+            for i, song in enumerate(playlist):
+                st.markdown(
+                    f"<tr><td>{i+1}</td><td>{song['artist_name']}</td><td>{song['track_name']}</td><td>{song['genre']}</td></tr>",
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown("</table>", unsafe_allow_html=True)
+        else:
+            st.warning("Aucune chanson trouvée pour cette playlist.")
     else:
         if new_upload or new_recording:
             st.error(

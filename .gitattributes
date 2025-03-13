@@ -1,0 +1,2 @@
+Streamlit/app/data/chroma_db/chroma.sqlite3 filter=lfs diff=lfs merge=lfs -text
+Streamlit/app/data/chroma_db/51fe768d-6820-4964-a402-ed282d5bb74c/data_level0.bin filter=lfs diff=lfs merge=lfs -text
