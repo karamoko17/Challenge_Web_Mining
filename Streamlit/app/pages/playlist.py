@@ -10,6 +10,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from SongRecognizer import SongRecognizer
 
+
 import streamlit as st
 
 st.set_page_config(page_title="Génération de playlist", page_icon="🎵", layout="wide")
