@@ -5,3 +5,4 @@ lyricsgenius
 spotipy
 shazamio
 streamlit
+audio_recorder_streamlit
