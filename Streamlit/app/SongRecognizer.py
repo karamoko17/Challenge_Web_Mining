@@ -40,7 +40,7 @@ class SongRecognizer:
         """Reconnaît une chanson à partir d'un fichier audio en utilisant Shazam"""
         try:
             # Reconnaissance Shazam
-            result = await shazam.recognize_song(file_path)
+            result = await shazam.recognize(file_path)
 
             if not result.get("track"):
                 print("Aucune chanson reconnue")
