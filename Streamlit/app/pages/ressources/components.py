@@ -76,7 +76,6 @@ def Navbar():
         st.markdown("## Navigation")
         st.page_link('app.py', label='Accueil', icon='🏠')
         st.page_link('pages/playlist.py', label='Génération de Playlist', icon='🎵')
-        st.page_link('pages/embeddings.py', label='Analyse des embeddings', icon='📊')
         st.markdown("---")
 
 
