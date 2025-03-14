@@ -2,7 +2,7 @@ from pages.ressources.components import Navbar, apply_custom_css, footer
 
 import streamlit as st
 
-st.set_page_config(page_title="Playlist Clustom", page_icon="💿", layout="wide")
+st.set_page_config(page_title="SISEZAM", page_icon="💿", layout="wide")
 
 
 def main():
