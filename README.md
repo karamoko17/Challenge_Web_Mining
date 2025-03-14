@@ -2,11 +2,6 @@
 **Music recommendation app**
 SISE'zam is a music recognition application that goes beyond simple track identification. Leveraging machine learning technologies, it analyzes the genre and lyrics of nearly 29000 songs to generate personalized recommendations. Our algorithm is using cutting-edge techniques such as vector embeddings, clustering, APIs and Natural Language Processing to provide you with the best recommendations.
 
-## 🌐 Online Demo
-
-You can try SISEzam online at our Streamlit.app demo: 
-[https://sisezam.streamlit.app/](https://sisezam.streamlit.app/)
-
 
 ## Table of Contents
 - [Key Features](#key-features)
