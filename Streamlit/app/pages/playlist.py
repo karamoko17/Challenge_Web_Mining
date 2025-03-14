@@ -9,7 +9,7 @@ from pages.ressources.components import Navbar, apply_custom_css, footer
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from SongRecognizer import SongRecognizer
-
+import time
 import streamlit as st
 import streamlit.components.v1 as components
 import chromadb
@@ -46,63 +46,6 @@ def run_async(coroutine):
     result = loop.run_until_complete(coroutine)
     loop.close()
     return result
-
-
-def preprocess_data(df):
-    numeric_features = [
-        "danceability",
-        "loudness",
-        "acousticness",
-        "instrumentalness",
-        "valence",
-        "energy",
-        "release_date",
-    ]
-    categorical_features = ["topic", "genre"]
-
-    df_numeric = df[numeric_features].fillna(0)
-    scaler = StandardScaler()
-    df_numeric_scaled = scaler.fit_transform(df_numeric)
-
-    encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
-    df_categorical = encoder.fit_transform(df[categorical_features])
-
-    df_scaled = np.hstack((df_numeric_scaled, df_categorical))
-    return df_scaled, scaler, encoder
-
-
-def train_clustering_model(df_scaled, n_clusters=10):
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-    clusters = kmeans.fit_predict(df_scaled)
-    return kmeans, clusters
-
-
-def recommend_similar_songs(
-    song_name, artist_name, df, df_scaled, kmeans, scaler, n_recommendations=15
-):
-    match = df[(df["track_name"] == song_name) & (df["artist_name"] == artist_name)]
-    if match.empty:
-        return "Chanson non trouvée dans la base de données."
-
-    song_index = match.index[0]
-    song_cluster = kmeans.labels_[song_index]
-    similar_songs = df[kmeans.labels_ == song_cluster]
-
-    song_features = df_scaled[song_index].reshape(1, -1)
-    distances = np.linalg.norm(
-        df_scaled[kmeans.labels_ == song_cluster] - song_features, axis=1
-    )
-    similar_songs["distance"] = distances
-
-    similar_songs = similar_songs[
-        (similar_songs["track_name"] != song_name)
-        | (similar_songs["artist_name"] != artist_name)
-    ]
-
-    recommendations = similar_songs.sort_values("distance").head(n_recommendations)[
-        ["artist_name", "track_name"]
-    ]
-    return recommendations
 
 def get_playlist(song_lyrics, genre, playlist_size = 15):
     response = client.embeddings.create(
@@ -164,6 +107,13 @@ def main():
     """,
         unsafe_allow_html=True,
     )
+    # Initialisation des variables en session
+    if "track_info" not in st.session_state:
+        st.session_state.track_info = None  
+    if "playlist_size" not in st.session_state:
+        st.session_state.playlist_size = 15  # Valeur par défaut du slider
+    if "playlist" not in st.session_state:
+        st.session_state.playlist = []  # Stocke la playlist générée
 
     col1, col2 = st.columns(2)
 
@@ -213,10 +163,16 @@ def main():
         with st.spinner("Reconnaissance en cours..."):
             success, track_info = run_async(process_recognition(temp_file_path))
         os.unlink(temp_file_path)
-    else:
-        success, track_info = False, None
+        if success:
+            st.session_state.track_info = track_info  
+            st.session_state.playlist = []  # 🔥 Réinitialisation de la playlist
+            st.session_state.playlist_size = 15  # 🔥 Réinitialisation du slider  # Forcer une mise à jour
 
-    if success:
+    # else:
+    #     success, st.session_state.track_info = False, None
+
+    if st.session_state.track_info is not None:
+        track_info = st.session_state.track_info
         col1, col2 = st.columns([1, 2])
         with col1:
             if track_info["coverarthq"]:
@@ -255,7 +211,7 @@ def main():
                     <button 
                       onclick="navigator.clipboard.writeText(`{escaped_lyrics}`)" 
                       style="
-                        background-color: #6aa36f;
+                        background-color: #ff69b4;
                         border: none;
                         color: white;
                         padding: 10px 20px;
@@ -275,9 +231,48 @@ def main():
                 st.info("Paroles non disponibles pour cette chanson.")
         # 🎵 Génération et affichage de la playlist
 
-        st.subheader("🎶 Playlist recommandée")
-        playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=10)
+        # st.subheader("🎶 Playlist recommandée")
+        # playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=10)
+        # Ajout du style pour le slider
+        st.markdown("""
+            <style>
+                /* Style du texte du slider */
+                .stSlider label {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #ff69b4;
+                }
 
+                /* Style de la barre du slider */
+                .stSlider .css-1dp5vir {
+                    background: linear-gradient(to right, #ff69b4, #ff1493);
+                    border-radius: 10px;
+                }
+
+                /* Style du curseur du slider */
+                .stSlider .css-1t5p9r6 {
+                    background-color: #ff1493 !important;
+                    box-shadow: 0px 0px 10px rgba(255, 20, 147, 0.8);
+                }
+            </style>
+        """, unsafe_allow_html=True)
+        # Titre de la section Playlist
+        st.subheader("🎶 Playlist recommandée")
+
+        # 🎚️ **Slider pour modifier dynamiquement la taille de la playlist**
+        playlist_size = st.slider("📏 Nombre de chansons", min_value=5, max_value=50, value=st.session_state.playlist_size, step=1)
+
+        # 🔥 **Récupération de la playlist UNIQUEMENT si `track_info` est disponible**
+        if playlist_size != st.session_state.playlist_size or not st.session_state.playlist:
+            st.session_state.playlist_size = playlist_size
+            st.session_state.playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=playlist_size)
+            st.rerun()
+        # 🎵 Génération de la playlist si nécessaire
+        if not st.session_state.playlist:
+            st.session_state.playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=st.session_state.playlist_size)
+
+          # 📌 **Affichage de la playlist**
+        playlist = st.session_state.playlist
         if playlist:
             # Style pour les conteneurs de chansons
             st.markdown("""
@@ -290,12 +285,15 @@ def main():
                         display: flex;
                         align-items: center;
                         gap: 20px;
+                        justify-content: space-between;
                     }
-                    .song-number {
-                        color: #ff69b4;
-                        font-size: 24px;
-                        font-weight: bold;
-                        min-width: 40px;
+                    /* Style de l'image de couverture */
+                    .song-cover {
+                        width: 60px; /* Taille ajustée */
+                        height: 60px;
+                        border-radius: 10px; /* Bords arrondis */
+                        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2); /* Ombre légère */
+                        object-fit: cover; /* Évite la déformation */
                     }
                     .song-info {
                         flex-grow: 1;
@@ -306,6 +304,25 @@ def main():
                         font-weight: bold;
                         margin: 0;
                     }
+                    .song-title a {
+                        color: white; /* Garde le texte blanc */
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin: 0;
+                        text-decoration: none; /* Enlève le soulignement */
+                        transition: all 0.3s ease-in-out;
+                    }
+                    /* Garde le texte blanc même après un clic */
+                    .song-title a:link, 
+                    .song-title a:visited, 
+                    .song-title a:active {
+                        color: white !important;
+                    }
+                    /* ✨ Effet de glow sur le titre au survol ✨ */
+                    .song-title:hover {
+                        text-shadow: 0 0 8px #ff69b4, 0 0 12px rgba(255, 105, 180, 0.8);
+                        color: #ff69b4;
+                    }
                     .song-artist {
                         color: #ff69b4;
                         font-size: 16px;
@@ -315,28 +332,65 @@ def main():
                         color: #888888;
                         font-size: 14px;
                     }
+                     /* 🎵 Style personnalisé pour le lecteur audio 🎵 */
+                    .audio-player {
+                        width: 170px;
+                        height: 32px;
+                        border-radius: 15px;
+                        background: #ff69b4;
+                        outline: none;
+                        border: 2px solid #ff69b4;
+                        box-shadow: 0 0 5px #ff69b4, 0 0 8px rgba(255, 105, 180, 0.5);
+                        transition: all 0.2s ease-in-out;
+                    }
+
+                    /* Effet subtil au survol */
+                    .audio-player:hover {
+                        box-shadow: 0 0 6px #ff69b4, 0 0 12px rgba(255, 105, 180, 0.4);
+                        filter: brightness(1.1);
+                    }
+
+
+                    /* Supprimer le style natif du navigateur */
+                    .audio-player::-webkit-media-controls-panel {
+                        background-color: rgba(255, 105, 180, 0.2);
+                        border-radius: 20px;
+                    }
+                    .audio-player::-webkit-media-controls-play-button {
+                        filter: invert(1);
+                    }
+                    .audio-player::-webkit-media-controls-volume-slider {
+                        filter: invert(1);
+                    }
                 </style>
             """, unsafe_allow_html=True)
 
             # Affichage de chaque chanson
             for i, song in enumerate(playlist, 1):
-                col1, col2 = st.columns([3, 1])
-                
-                with col1:
-                    st.markdown(f"""
-                        <div class="song-item">
-                            <div class="song-number">#{i}</div>
-                            <div class="song-info">
-                                <div class="song-title">{song['track_name']}</div>
-                                <div class="song-artist">{song['artist_name']}</div>
-                                <div class="song-genre">{song['genre']}</div>
-                            </div>
+                # Vérification que l'URL audio est bien présente
+                if 'coverarturl' in song and song['coverarturl']:
+                    cover_html = f'<img class="song-cover" src="{song["coverarturl"]}" alt="Cover">'
+
+                audio_html = ""
+                if 'url_preview' in song and song['url_preview']:
+                    audio_html = f"""
+                        <audio class="audio-player" controls>
+                            <source src="{song['url_preview']}" type="audio/mpeg">
+                            Votre navigateur ne supporte pas l'élément audio.
+                        </audio>
+                    """
+                # Affichage du morceau
+                st.markdown(f"""
+                    <div class="song-item">
+                        {cover_html}
+                        <div class="song-info">
+                            <div class="song-title"><a href="{song['url_album']}">{song['track_name']}</a></div>
+                            <div class="song-artist">{song['artist_name']}</div>
+                            <div class="song-genre">{song['genre']}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-                
-                with col2:
-                    if 'audio_preview_url' in song and song['audio_preview_url'] and song['audio_preview_url'].strip():
-                        st.audio(song['audio_preview_url'], format="audio/mpeg")
+                        {audio_html}
+                    </div>
+                """, unsafe_allow_html=True)
 
         else:
             st.warning("Aucune chanson trouvée pour cette playlist.")
