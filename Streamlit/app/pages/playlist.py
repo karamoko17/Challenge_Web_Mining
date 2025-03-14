@@ -374,10 +374,12 @@ def main():
                 audio_html = ""
                 if 'url_preview' in song and song['url_preview']:
                     audio_html = f"""
+                    <div id="audio-{i}">
                         <audio class="audio-player" controls>
                             <source src="{song['url_preview']}" type="audio/mpeg">
                             Votre navigateur ne supporte pas l'élément audio.
                         </audio>
+                    </div>
                     """
                 # Affichage du morceau
                 st.markdown(f"""
