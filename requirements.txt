@@ -156,7 +156,7 @@ PyPika==0.48.9
 pyproject_hooks==1.2.0
 pyreadline3==3.5.4
 python-dotenv==1.0.1
-pytz==2025.1
+pytz>=2023.3
 pywin32==307
 PyYAML==6.0.2
 redis==5.2.1
