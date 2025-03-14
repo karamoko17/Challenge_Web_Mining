@@ -59,11 +59,11 @@ def get_playlist(song_lyrics, genre, playlist_size = 15):
     )
     playlist = results_music["metadatas"][0]
     
-    # Ajout des URLs de preview audio pour chaque chanson
-    for song in playlist:
-        song['audio_preview_url'] = song.get('audio_preview_url', '')  # Utiliser l'URL existante si présente
-        if not song['audio_preview_url'] and 'track_id' in song:
-            song['audio_preview_url'] = f"https://p.scdn.co/mp3-preview/{song['track_id']}"
+    # # Ajout des URLs de preview audio pour chaque chanson
+    # for song in playlist:
+    #     song['audio_preview_url'] = song.get('audio_preview_url', '')  # Utiliser l'URL existante si présente
+    #     if not song['audio_preview_url'] and 'track_id' in song:
+    #         song['audio_preview_url'] = f"https://p.scdn.co/mp3-preview/{song['track_id']}"
     
     return playlist
 
@@ -266,7 +266,7 @@ def main():
         if playlist_size != st.session_state.playlist_size or not st.session_state.playlist:
             st.session_state.playlist_size = playlist_size
             st.session_state.playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=playlist_size)
-            st.rerun()
+            # st.rerun()
         # 🎵 Génération de la playlist si nécessaire
         if not st.session_state.playlist:
             st.session_state.playlist = get_playlist(track_info["lyrics"], track_info["genre"].lower(), playlist_size=st.session_state.playlist_size)
@@ -376,7 +376,7 @@ def main():
                     audio_html = f"""
                     <div id="audio-{i}">
                         <audio class="audio-player" controls>
-                            <source src="{song['url_preview']}" type="audio/mpeg">
+                            <source src="{song.get('url_preview',None)}" type="audio/mpeg">
                             Votre navigateur ne supporte pas l'élément audio.
                         </audio>
                     </div>
@@ -386,9 +386,9 @@ def main():
                     <div class="song-item">
                         {cover_html}
                         <div class="song-info">
-                            <div class="song-title"><a href="{song['url_album']}">{song['track_name']}</a></div>
-                            <div class="song-artist">{song['artist_name']}</div>
-                            <div class="song-genre">{song['genre']}</div>
+                            <div class="song-title"><a href="{song.get('url_album', None)}">{song.get('track_name',None)}</a></div>
+                            <div class="song-artist">{song.get('artist_name',None)}</div>
+                            <div class="song-genre">{song.get('genre',None)}</div>
                         </div>
                         {audio_html}
                     </div>
